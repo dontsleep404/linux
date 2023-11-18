@@ -1,12 +1,12 @@
 #!/bin/bash
 
 install_lampp(){
+    base_dir=$(pwd)
     echo "Installing..."
     apt-get -y install wget git
     git clone https://github.com/teddysun/lamp.git
-    cd lamp
-    chmod 755 *.sh
-    lamp --apache_option 1 --apache_modules mod_wsgi,mod_security --db_option 1 --db_root_pwd 123456 --php_option 1 --php_extensions apcu,ioncube,imagick,redis,mongodb,libsodium,swoole --db_manage_modules phpmyadmin,adminer --kodexplorer_option 1
+    chmod 755 ./lamp/*.sh
+    ./lamp/lamp.sh --apache_option 1 --apache_modules mod_wsgi,mod_security --db_option 1 --db_root_pwd 123456 --php_option 1 --php_extensions apcu,ioncube,imagick,redis,mongodb,libsodium,swoole --db_manage_modules phpmyadmin,adminer --kodexplorer_option 1
 }
 
 restart_server(){
@@ -31,12 +31,12 @@ generate_ssl(){
     read -p "Input Domain (Ex: test.com): " domain
     ssl $domain
     echo "Key : ${base_dir}/private/${domain}.key"
-    echo "Cert : ${base_dir}/certs/${domain}.cert"
+    echo "Cert : ${base_dir}/certs/${domain}.crt"
     echo "Success"
 }
 
 ssl(){
-    domain = $1
+    domain=$1
     echo "Domain is $1"
     openssl req -new -sha256 -newkey rsa:2048 -nodes -keyout ./private/${domain}.key -x509 -days 3650 -out ./certs/${domain}.crt \
     -config <(cat <<EOF
@@ -82,6 +82,10 @@ DNS.1 = $domain
 EOF
 )
 }
+add_virtual_host(){
+    echo "Add virutal host"
+    bash ./lamp/conf/lamp add
+}
 while true; do
     clear
     echo "===== MENU ====="
@@ -108,8 +112,7 @@ while true; do
             generate_ssl
             ;;
         5)
-            echo "Add virutal host"
-            lamp add
+            add_virtual_host
             ;;
         6)
             echo "Exiting..."
