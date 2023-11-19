@@ -53,33 +53,14 @@ Please enter full path to SSL Certificate Key file: /home/dontsleep/linux/privat
 Do you want force redirection from HTTP to HTTPS? [y/n]: y
 ```
 
-## Now exit script and clone website
-EX : https://github.com/FaztWeb/php-mysql-crud
+## 6. Create Test SSL Website
+Source : https://github.com/FaztWeb/php-mysql-crud
+Domain : https://testssl.com => localhost
 ```
-git clone https://github.com/FaztWeb/php-mysql-crud ./crud
-mv ./crud/* /data/www/testssl.com
-```
-Now edit db.php
-```php
-<?php
-session_start();
-
-$conn = mysqli_connect(
-  'localhost',
-  'php_mysql_crud',
-  '123456',
-  'php_mysql_crud'
-) or die(mysqli_error($mysqli));
-?>
-```
-Now import sql file
-```
-mysql --user=php_mysql_crud --password=123456
-mysql> source /data/www/testssl.com/database/script.sql
-mysql> exit
-```
-Now edit host file
-```bash
-echo "127.0.0.1    testssl.com" | sudo tee -a /etc/hosts
+Input Domain (Ex: test.com): testssl.com
+...
+....
+...
+Done
 ```
 Now goto browser and goto https://testssl.com

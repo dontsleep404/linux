@@ -132,8 +132,8 @@ while true; do
     echo "3. Stop Server"
     echo "4. Generate SSL"
     echo "5. Create Virutal Host"
-    echo "8. Create Test SSL Website"
-    echo "6. Exit"
+    echo "6. Create Test SSL Website"
+    echo "7. Exit"
     echo "================"
     read -p "Nhập lựa chọn của bạn (1-6): " choice
 
@@ -153,11 +153,11 @@ while true; do
         5)
             add_virtual_host
             ;;
-        6)
+        7)
             echo "Exiting..."
             exit 0
             ;;
-        8)
+        6)
             test
             ;;
         *)
