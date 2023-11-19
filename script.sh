@@ -86,6 +86,44 @@ add_virtual_host(){
     echo "Add virutal host"
     bash ./lamp/conf/lamp add
 }
+test(){
+    base_dir=$(pwd)
+    read -p "Input Domain (Ex: test.com): " domain
+    ssl $domain
+    cert_path=${base_dir}/certs/${domain}.crt
+    key_path=${base_dir}/private/${domain}.key
+    wed_dir=/data/www/${domain}
+    chmod 777 ${wed_dir}
+    bash ./lamp/conf/lamp add <<EOF
+$domain
+${wed_dir}
+test@$domain
+n
+y
+1
+$cert_path
+$key_path
+y
+EOF
+    echo "127.0.0.1    ${domain}" | sudo tee -a /etc/hosts
+    rm -rf ./crud
+    git clone https://github.com/FaztWeb/php-mysql-crud ./crud
+    mv ./crud/* ${wed_dir}
+    rm -rf ./crud
+    chmod 777 ${wed_dir}/db.php
+    cat <<EOL > ${wed_dir}/db.php
+<?php
+session_start();
+\$conn = mysqli_connect(
+  'localhost',
+  'root',
+  '123456',
+  'php_mysql_crud'
+) or die(mysqli_error(\$mysqli));
+?>
+EOL
+    mysql -u root -p123456 < ${wed_dir}/database/script.sql
+}
 while true; do
     clear
     echo "===== MENU ====="
@@ -94,6 +132,7 @@ while true; do
     echo "3. Stop Server"
     echo "4. Generate SSL"
     echo "5. Create Virutal Host"
+    echo "8. Create Test SSL Website"
     echo "6. Exit"
     echo "================"
     read -p "Nhập lựa chọn của bạn (1-6): " choice
@@ -117,6 +156,9 @@ while true; do
         6)
             echo "Exiting..."
             exit 0
+            ;;
+        8)
+            test
             ;;
         *)
             echo "Lựa chọn không hợp lệ. Hãy chọn từ 1 đến 6."
