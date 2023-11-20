@@ -55,6 +55,7 @@ Do you want force redirection from HTTP to HTTPS? [y/n]: y
 
 ## 6. Create Test SSL Website
 Source : https://github.com/FaztWeb/php-mysql-crud
+
 Domain : https://testssl.com => localhost
 ```
 Input Domain (Ex: test.com): testssl.com
@@ -63,4 +64,6 @@ Input Domain (Ex: test.com): testssl.com
 ...
 Done
 ```
+Install cert for local machine : https://ubuntu.com/server/docs/security-trust-store
+
 Now goto browser and goto https://testssl.com
