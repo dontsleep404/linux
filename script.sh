@@ -124,6 +124,146 @@ session_start();
 EOL
     mysql -u root -p123456 < ${wed_dir}/database/script.sql
 }
+selected_options=()
+
+is_option_selected() {
+    local option="$1"
+    for selected_option in "${selected_options[@]}"; do
+        if [ "$selected_option" == "$option" ]; then
+            return 0  # Option is already selected
+        fi
+    done
+    return 1  # Option is not selected
+}
+
+generate_htaccess() {
+    selected_options=()
+    local directory="$1"
+    if [ -f "$directory/.htaccess" ]; then
+    echo "File exists."
+
+    read -p "Do you want to replace the file? (y/n): " choice
+
+    case $choice in
+        y|Y)
+            # Your logic for replacing the file goes here
+            echo "Replacing the file..."
+            ;;
+        n|N)
+            echo "File will not be replaced."
+            return
+            ;;
+        *)
+            echo "Invalid choice. File will not be replaced."
+            return
+            ;;
+    esac
+else
+    echo "File does not exist."
+fi
+
+
+    cat > "$directory/.htaccess" <<EOL
+# Enable mod_rewrite
+RewriteEngine On
+
+# Set the base directory
+RewriteBase /
+
+EOL
+
+    # Handle menu options
+    while true; do
+        echo "Select an option:"
+        echo "1. Custom error pages"
+        echo "2. Redirect HTTP to HTTPS"
+        echo "3. Remove index.php from the URL"
+        echo "4. Block access to certain file types"
+        echo "5. Disable directory browsing"
+        echo "6. Exit and save"
+
+        read -p "Enter your choice (1-6): " choice
+
+        if is_option_selected "$choice"; then
+            echo "Option $choice is already selected. Please choose a different option."
+            continue
+        fi
+
+        selected_options+=("$choice")
+
+        case $choice in
+            2)
+                echo "Redirecting HTTP to HTTPS"
+                cat >> "$directory/.htaccess" <<EOL
+# Redirect HTTP to HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+EOL
+                ;;
+            3)
+                echo "Removing index.php from the URL"
+                cat >> "$directory/.htaccess" <<EOL
+# Remove index.php from the URL
+RewriteCond %{THE_REQUEST} /index\.php [NC]
+RewriteRule ^(.*)index\.php$ / [L,R=301]
+
+EOL
+                ;;
+            4)
+                echo "Blocking access to certain file types"
+                cat >> "$directory/.htaccess" <<EOL
+# Block access to certain file types
+<FilesMatch "\.(htaccess|htpasswd|ini|phps|fla|psd|log|sh)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+EOL
+                ;;
+            5)
+                echo "Disabling directory browsing"
+                cat >> "$directory/.htaccess" <<EOL
+# Disable directory browsing
+Options -Indexes
+
+EOL
+                ;;
+            1)
+                echo "Setting up custom error pages"
+
+                read -p "Enter the path to the 404 error page: " error404_page
+                read -p "Enter the path to the 500 error page: " error500_page
+
+                cat >> "$directory/.htaccess" <<EOL
+# Custom error pages
+ErrorDocument 404 $error404_page
+ErrorDocument 500 $error500_page
+
+EOL
+                ;;
+            6)
+                echo "Exiting and saving .htaccess file"
+                restart_server
+                break
+                ;;
+            *)
+                echo "Invalid choice, please enter a number between 1 and 7."
+                ;;
+        esac
+    done
+}
+
+install_crt(){
+    local crt_file="$1"
+    echo "$crt_file"
+    if [ -f "$crt_file" ]; then
+        cp $1 /usr/local/share/ca-certificates/
+        update-ca-certificates
+    else
+        echo "File not exits";
+    fi
+}
 while true; do
     clear
     echo "===== MENU ====="
@@ -133,9 +273,11 @@ while true; do
     echo "4. Generate SSL"
     echo "5. Create Virutal Host"
     echo "6. Create Test SSL Website"
-    echo "7. Exit"
+    echo "7. Config host"
+    echo "8. Install cert"
+    echo "9. Exit"
     echo "================"
-    read -p "Nhập lựa chọn của bạn (1-6): " choice
+    read -p "Nhập lựa chọn của bạn (1-9): " choice
 
     case $choice in
         1)
@@ -154,11 +296,23 @@ while true; do
             add_virtual_host
             ;;
         7)
+            read -p "Enter the directory path (e.g., /path/to/your/website): " selected_directory 
+            if [ -d "$selected_directory" ]; then
+                generate_htaccess "$selected_directory"
+            else
+                echo "Error: The selected directory does not exist."
+            fi
+            ;;
+        9)
             echo "Exiting..."
             exit 0
             ;;
         6)
             test
+            ;;
+        8)
+            read -p "Enter cert path (e.g., /path/hello.crt):" cert_path
+            install_crt "$cert_path"
             ;;
         *)
             echo "Lựa chọn không hợp lệ. Hãy chọn từ 1 đến 6."
